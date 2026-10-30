@@ -24,7 +24,7 @@ async def test_load_generator_success():
     qps = 10
     duration = 0.5
     
-    with patch("aiohttp.ClientSession.get", return_value=MockResponse(200)):
+    with patch("aiohttp.ClientSession.request", return_value=MockResponse(200)):
         generator = LoadGenerator(url, qps, duration)
         results = await generator.run()
         
@@ -41,13 +41,26 @@ async def test_load_generator_errors():
     qps = 5
     duration = 0.4
     
-    with patch("aiohttp.ClientSession.get", return_value=MockResponse(500)):
+    with patch("aiohttp.ClientSession.request", return_value=MockResponse(500)):
         generator = LoadGenerator(url, qps, duration)
         results = await generator.run()
         
         assert len(results) == 2
         for res in results:
             assert res.status == 500
+
+@pytest.mark.asyncio
+async def test_load_generator_custom_method_headers_data():
+    url = "http://test.local/api"
+    qps = 2
+    duration = 0.5
+    
+    with patch("aiohttp.ClientSession.request", return_value=MockResponse(200)) as mock_request:
+        generator = LoadGenerator(url, qps, duration, method="POST", headers={"Content-Type": "application/json"}, data='{"key": "value"}')
+        results = await generator.run()
+        
+        assert len(results) == 1
+        mock_request.assert_called_with("POST", url, headers={"Content-Type": "application/json"}, data='{"key": "value"}')
 
 
 def test_latency_calculation():

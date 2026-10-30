@@ -26,6 +26,23 @@ def parse_args():
         required=True,
         help="Test duration in seconds"
     )
+    parser.add_argument(
+        "-X", "--method",
+        type=str,
+        default="GET",
+        help="HTTP method to use (default: GET)"
+    )
+    parser.add_argument(
+        "-H", "--header",
+        type=str,
+        action="append",
+        help="Custom header to pass to server (e.g. -H 'Content-Type: application/json')"
+    )
+    parser.add_argument(
+        "-d", "--data",
+        type=str,
+        help="HTTP POST/PUT data"
+    )
     return parser.parse_args()
 
 
@@ -40,11 +57,27 @@ def main():
         print("Error: Duration must be greater than 0", file=sys.stderr)
         sys.exit(1)
 
+    headers = {}
+    if args.header:
+        for h in args.header:
+            if ":" in h:
+                key, val = h.split(":", 1)
+                headers[key.strip()] = val.strip()
+            else:
+                headers[h.strip()] = ""
+
     print(f"Starting load test on {args.url}")
     print(f"Target QPS: {args.qps}, Duration: {args.duration}s")
     
     try:
-        generator = LoadGenerator(url=args.url, qps=args.qps, duration=args.duration)
+        generator = LoadGenerator(
+            url=args.url,
+            qps=args.qps,
+            duration=args.duration,
+            method=args.method,
+            headers=headers,
+            data=args.data
+        )
         results = asyncio.run(generator.run())
         print_summary(results)
     except KeyboardInterrupt:

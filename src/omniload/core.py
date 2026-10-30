@@ -22,10 +22,13 @@ class RequestResult:
 
 
 class LoadGenerator:
-    def __init__(self, url: str, qps: float, duration: float):
+    def __init__(self, url: str, qps: float, duration: float, method: str = "GET", headers: dict = None, data: str = None):
         self.url = url
         self.qps = qps
         self.duration = duration
+        self.method = method.upper()
+        self.headers = headers or {}
+        self.data = data
         self.total_requests = int(qps * duration)
         self.results: List[RequestResult] = []
 
@@ -36,7 +39,7 @@ class LoadGenerator:
         status = 0
         error_msg = ""
         try:
-            async with session.get(self.url) as response:
+            async with session.request(self.method, self.url, headers=self.headers, data=self.data) as response:
                 status = response.status
                 await response.read()
         except Exception as e:

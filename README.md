@@ -34,6 +34,19 @@ uv pip install -e .[dev]
 omniload --qps 100 --duration 10 http://localhost:8080/api/health
 ```
 
+### Advanced Usage (Custom Methods, Headers, and Data)
+
+You can specify a custom HTTP method, headers, and body payload for testing complex endpoints (e.g., `POST`, `PUT`):
+
+```bash
+omniload --qps 50 --duration 10 \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer token" \
+  -d '{"key": "value"}' \
+  http://localhost:8080/api/submit
+```
+
 ### Worked Example
 
 Running a 10-second test against an endpoint at 50 QPS:
